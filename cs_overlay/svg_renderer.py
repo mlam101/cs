@@ -38,15 +38,43 @@ def render_overlay_svg(
             f'<text x="{padding}" y="{padding}" fill="#e2e8f0" font-size="20" font-family="Arial">{escape(title)}</text>'
         )
 
+    def scale_point(x: float, y: float) -> tuple[float, float]:
+        return (
+            padding + (x - min_x) * scale_x,
+            height - padding - (y - min_y) * scale_y,
+        )
+
     for path in paths:
         color = _color_for_label(path.match_label)
         points = " ".join(
-            f"{padding + (point.x - min_x) * scale_x:.2f},{height - padding - (point.y - min_y) * scale_y:.2f}"
+            f"{scale_point(point.x, point.y)[0]:.2f},{scale_point(point.x, point.y)[1]:.2f}"
             for point in path.points
         )
         lines.append(
             f'<polyline points="{points}" fill="none" stroke="{color}" stroke-opacity="0.55" stroke-width="2"/>'
         )
+        start_x, start_y = scale_point(path.points[0].x, path.points[0].y)
+        lines.append(
+            f'<text x="{start_x:.2f}" y="{start_y - 6:.2f}" fill="#f8fafc" font-size="15">{escape(path.player_icon)}</text>'
+        )
+
+        if path.last_weapon:
+            end_x, end_y = scale_point(path.points[-1].x, path.points[-1].y)
+            lines.append(
+                f'<text x="{end_x + 6:.2f}" y="{end_y:.2f}" fill="#fde68a" font-size="11" font-family="Arial">{escape(path.last_weapon)}</text>'
+            )
+
+        for flash_point in path.flash_points:
+            marker_x, marker_y = scale_point(flash_point.x, flash_point.y)
+            lines.append(
+                f'<circle cx="{marker_x:.2f}" cy="{marker_y:.2f}" r="3" fill="#22d3ee" fill-opacity="0.9"/>'
+            )
+
+        for grenade_point in path.grenade_points:
+            marker_x, marker_y = scale_point(grenade_point.x, grenade_point.y)
+            lines.append(
+                f'<rect x="{marker_x - 2:.2f}" y="{marker_y - 2:.2f}" width="4" height="4" fill="#f97316" fill-opacity="0.9"/>'
+            )
 
     lines.append("</svg>")
     return "\n".join(lines)

@@ -1,15 +1,33 @@
 # cs
 
-Lightweight Python CLI to overlay player movement paths from multiple CS2 demos into a single 2D SVG rendering.
+Lightweight Python app to overlay player movement paths from multiple CS2 demos into a single 2D SVG rendering.
 
 ## Features
 
 - Analyze multiple `.dem` files in one run
+- GUI mode that discovers demos from an in-app `cs_overlay/demos` folder
 - Filter by player name and side (`CT` / `T`)
 - Overlay all extracted round paths in a single 2D output
+- Render player icons, weapon labels, flash markers, and grenade markers
 - Generate a standalone SVG file that can be viewed in any browser
 
 ## Usage
+
+Start the GUI (default when no arguments are passed):
+
+```bash
+python -m cs_overlay
+```
+
+Put `.dem` files in:
+
+```bash
+cs_overlay/demos/
+```
+
+The GUI lets you select demos, set filters, and write an SVG.
+
+CLI mode is still available:
 
 ```bash
 python -m cs_overlay \
@@ -25,6 +43,8 @@ Optional arguments:
 - `--label`: custom label for each `--demo` (same count as demos)
 - `--title`: title text rendered in the SVG
 - `--min-points`: minimum number of points required for a path (default: `2`)
+- `--gui`: force GUI mode
+- `--demos-dir`: custom demos folder for GUI mode
 
 ## Demo parsing library
 

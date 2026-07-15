@@ -14,3 +14,7 @@ class PathTrace:
     player_name: str
     side: str
     points: tuple[Point, ...]
+    player_icon: str = "👤"
+    last_weapon: str | None = None
+    flash_points: tuple[Point, ...] = ()
+    grenade_points: tuple[Point, ...] = ()
