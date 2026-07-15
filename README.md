@@ -6,9 +6,11 @@ Lightweight Python app to overlay player movement paths from multiple CS2 demos 
 
 - Analyze multiple `.dem` files in one run
 - GUI mode that discovers demos from an in-app `cs_overlay/demos` folder
+- Upload demos into the app directly from a file picker
 - Filter by player name and side (`CT` / `T`)
 - Overlay all extracted round paths in a single 2D output
 - Render player icons, weapon labels, flash markers, and grenade markers
+- Preview full-match playback inside the app with a forward/back scrub bar and play/pause control
 - Generate a standalone SVG file that can be viewed in any browser
 
 ## Usage
@@ -25,7 +27,7 @@ Put `.dem` files in:
 cs_overlay/demos/
 ```
 
-The GUI lets you select demos, set filters, and write an SVG.
+The GUI lets you upload/select demos, set filters, scrub through playback in-app, and write an SVG.
 
 CLI mode is still available:
 

@@ -6,7 +6,7 @@ from .models import PathTrace, Point
 
 
 class Demoparser2Extractor:
-    REQUIRED_COLUMNS = (
+    CORE_COLUMNS = (
         "X",
         "Y",
         "name",
@@ -14,6 +14,8 @@ class Demoparser2Extractor:
         "is_alive",
         "round_num",
         "active_weapon_name",
+    )
+    OPTIONAL_COLUMNS = (
         "is_flashed",
         "flash_duration",
     )
@@ -32,7 +34,7 @@ class Demoparser2Extractor:
                 "demoparser2 is required to parse CS2 demos. Install with: pip install demoparser2"
             ) from exc
 
-        ticks = DemoParser(demo_path).parse_ticks(list(self.REQUIRED_COLUMNS))
+        ticks = self._parse_ticks_with_fallback(DemoParser, demo_path)
         records = _to_records(ticks)
         grouped_points: dict[tuple[int, str, str], list[Point]] = defaultdict(list)
         grouped_flash_points: dict[tuple[int, str, str], list[Point]] = defaultdict(list)
@@ -89,6 +91,16 @@ class Demoparser2Extractor:
             for (round_number, player, team_side), points in grouped_points.items()
         ]
 
+    def _parse_ticks_with_fallback(self, parser_cls, demo_path: str):
+        preferred_columns = [*self.CORE_COLUMNS, *self.OPTIONAL_COLUMNS]
+        parser = parser_cls(demo_path)
+        try:
+            return parser.parse_ticks(preferred_columns)
+        except Exception as exc:
+            if not _is_missing_entity_error(exc):
+                raise
+        return parser.parse_ticks(list(self.CORE_COLUMNS))
+
 
 def _to_records(data) -> list[dict]:
     if hasattr(data, "to_dict"):
@@ -99,3 +111,7 @@ def _to_records(data) -> list[dict]:
     if isinstance(data, list):
         return [row for row in data if isinstance(row, dict)]
     raise TypeError("Unsupported parser output format; expected table-like rows")
+
+
+def _is_missing_entity_error(error: Exception) -> bool:
+    return "entity" in str(error).lower() and "not found" in str(error).lower()

@@ -1,5 +1,8 @@
 import unittest
+import sys
+from types import SimpleNamespace
 
+from cs_overlay.demoparser_extractor import Demoparser2Extractor
 from cs_overlay.models import PathTrace, Point
 from cs_overlay.overlay import build_overlay_paths
 from cs_overlay.svg_renderer import render_overlay_svg
@@ -88,6 +91,44 @@ class OverlayTests(unittest.TestCase):
         self.assertIn("<circle", svg)
         self.assertIn("<rect", svg)
         self.assertIn("👤", svg)
+
+    def test_demoparser_extractor_falls_back_when_optional_entity_missing(self):
+        class FakeDemoParser:
+            calls: list[tuple[str, ...]] = []
+
+            def __init__(self, _demo_path):
+                pass
+
+            def parse_ticks(self, columns):
+                FakeDemoParser.calls.append(tuple(columns))
+                if "is_flashed" in columns:
+                    raise RuntimeError("entity not found: is_flashed")
+                return [
+                    {
+                        "X": 10.0,
+                        "Y": 20.0,
+                        "name": "p1",
+                        "team_name": "CT",
+                        "is_alive": True,
+                        "round_num": 1,
+                        "active_weapon_name": "ak47",
+                    }
+                ]
+
+        original_module = sys.modules.get("demoparser2")
+        sys.modules["demoparser2"] = SimpleNamespace(DemoParser=FakeDemoParser)
+        try:
+            traces = Demoparser2Extractor().extract_paths("demo.dem", "match")
+        finally:
+            if original_module is None:
+                del sys.modules["demoparser2"]
+            else:
+                sys.modules["demoparser2"] = original_module
+
+        self.assertEqual(len(traces), 1)
+        self.assertEqual(len(FakeDemoParser.calls), 2)
+        self.assertIn("is_flashed", FakeDemoParser.calls[0])
+        self.assertNotIn("is_flashed", FakeDemoParser.calls[1])
 
 
 if __name__ == "__main__":
