@@ -65,6 +65,9 @@ class OverlayTests(unittest.TestCase):
                 player_name="p1",
                 side="CT",
                 points=(Point(0, 0), Point(50, 50), Point(100, 50)),
+                last_weapon="ak47",
+                flash_points=(Point(50, 50),),
+                grenade_points=(Point(100, 50),),
             ),
             PathTrace(
                 match_label="match-b",
@@ -81,6 +84,10 @@ class OverlayTests(unittest.TestCase):
         self.assertIn("</svg>", svg)
         self.assertEqual(svg.count("<polyline"), 2)
         self.assertIn("overlay", svg)
+        self.assertIn("ak47", svg)
+        self.assertIn("<circle", svg)
+        self.assertIn("<rect", svg)
+        self.assertIn("👤", svg)
 
 
 if __name__ == "__main__":

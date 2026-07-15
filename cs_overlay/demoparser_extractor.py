@@ -6,7 +6,17 @@ from .models import PathTrace, Point
 
 
 class Demoparser2Extractor:
-    REQUIRED_COLUMNS = ("X", "Y", "name", "team_name", "is_alive", "round_num")
+    REQUIRED_COLUMNS = (
+        "X",
+        "Y",
+        "name",
+        "team_name",
+        "is_alive",
+        "round_num",
+        "active_weapon_name",
+        "is_flashed",
+        "flash_duration",
+    )
 
     def extract_paths(
         self,
@@ -24,7 +34,10 @@ class Demoparser2Extractor:
 
         ticks = DemoParser(demo_path).parse_ticks(list(self.REQUIRED_COLUMNS))
         records = _to_records(ticks)
-        grouped: dict[tuple[int, str, str], list[Point]] = defaultdict(list)
+        grouped_points: dict[tuple[int, str, str], list[Point]] = defaultdict(list)
+        grouped_flash_points: dict[tuple[int, str, str], list[Point]] = defaultdict(list)
+        grouped_grenade_points: dict[tuple[int, str, str], list[Point]] = defaultdict(list)
+        grouped_weapon: dict[tuple[int, str, str], str | None] = {}
 
         for row in records:
             if not row.get("is_alive"):
@@ -43,9 +56,24 @@ class Demoparser2Extractor:
             if x is None or y is None or round_number is None:
                 continue
 
-            grouped[(int(round_number), current_player, current_side)].append(
-                Point(float(x), float(y))
-            )
+            key = (int(round_number), current_player, current_side)
+            point = Point(float(x), float(y))
+            grouped_points[key].append(point)
+
+            weapon_name = str(row.get("active_weapon_name") or "").strip() or None
+            if weapon_name:
+                grouped_weapon[key] = weapon_name
+                if "grenade" in weapon_name.lower():
+                    grouped_grenade_points[key].append(point)
+
+            is_flashed = bool(row.get("is_flashed"))
+            if not is_flashed:
+                try:
+                    is_flashed = float(row.get("flash_duration") or 0) > 0
+                except (TypeError, ValueError):
+                    is_flashed = False
+            if is_flashed:
+                grouped_flash_points[key].append(point)
 
         return [
             PathTrace(
@@ -54,8 +82,11 @@ class Demoparser2Extractor:
                 player_name=player,
                 side=team_side,
                 points=tuple(points),
+                last_weapon=grouped_weapon.get((round_number, player, team_side)),
+                flash_points=tuple(grouped_flash_points.get((round_number, player, team_side), [])),
+                grenade_points=tuple(grouped_grenade_points.get((round_number, player, team_side), [])),
             )
-            for (round_number, player, team_side), points in grouped.items()
+            for (round_number, player, team_side), points in grouped_points.items()
         ]
 
 
