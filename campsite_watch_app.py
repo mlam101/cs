@@ -115,7 +115,7 @@ def create_app() -> Flask:
     def toggle_watch_page(watch_id: int):
         active = request.form.get("active", "false") == "true"
         storage.set_watch_active(watch_id, active)
-        return redirect(request.referrer or url_for("index"))
+        return redirect(url_for("index"))
 
     @app.get("/watches/<int:watch_id>/checks")
     def get_checks_page(watch_id: int):
