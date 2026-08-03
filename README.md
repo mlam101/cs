@@ -56,3 +56,42 @@ Install it in your environment before running:
 ```bash
 pip install demoparser2
 ```
+## BC campsite availability watcher (starter)
+
+This repository now includes a starter website/API to monitor BC backcountry campsite availability and notify users when a watch becomes available.
+
+### Files
+
+- `/home/runner/work/cs/cs/campsite_watch_app.py` - Flask website + API routes
+- `/home/runner/work/cs/cs/campsite_watch_storage.py` - SQLite schema and data access
+- `/home/runner/work/cs/cs/campsite_watch_checker.py` - periodic check + state-change alert logic
+- `/home/runner/work/cs/cs/campsite_watch_clients.py` - BC fetch client + notification client
+
+### API endpoints
+
+- `POST /api/watches` create watch
+- `GET /api/watches?user_id=<id>` list user watches
+- `PATCH /api/watches/:id` pause/resume using `{ "active": true|false }`
+- `GET /api/watches/:id/checks` check history
+- `GET /api/watches/:id/alerts` alert history
+- `POST /api/run-checks` trigger checker manually
+
+### Run
+
+Install dependency:
+
+```bash
+pip install flask
+```
+
+Start app:
+
+```bash
+python /home/runner/work/cs/cs/campsite_watch_app.py
+```
+
+Then open `http://localhost:8000`.
+
+### Legal note
+
+Before configuring a real BC data endpoint, review Terms of Use and robots.txt, prefer official APIs, and use rate limiting/backoff.
